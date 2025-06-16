@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Audio Recorder</title>
+</head>
+<body>
+  <h1>Simple Audio Recorder</h1>
+  <button id="startBtn">Start Recording</button>
+  <button id="stopBtn" disabled>Stop Recording</button>
+  <ol id="recordingsList"></ol>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let fileIndex = 1;
+
+    document.getElementById('startBtn').onclick = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+
+        const li = document.createElement('li');
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.src = url;
+
+        const downloadBtn = document.createElement('a');
+        downloadBtn.href = url;
+        downloadBtn.download = `recording_${fileIndex++}.webm`;
+        downloadBtn.textContent = 'Download';
+
+        li.appendChild(audio);
+        li.appendChild(document.createTextNode(' '));
+        li.appendChild(downloadBtn);
+
+        document.getElementById('recordingsList').appendChild(li);
+      };
+
+      mediaRecorder.start();
+      document.getElementById('startBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+    };
+
+    document.getElementById('stopBtn').onclick = () => {
+      mediaRecorder.stop();
+      document.getElementById('startBtn').disabled = false;
+      document.getElementById('stopBtn').disabled = true;
+    };
+  </script>
+</body>
+</html>
